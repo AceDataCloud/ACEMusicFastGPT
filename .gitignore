@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+.pytest_cache/
+node_modules/
+dist/
+out/
+*.difypkg
+*.pkg
+*.tgz
+_assets/icon.png
+/logo.png
