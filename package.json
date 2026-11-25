@@ -5,7 +5,7 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "build": "python3 scripts/fetch_icon.py && fastgpt-plugin build --entry . --output ./dist",
+    "build": "fastgpt-plugin build --entry . --output ./dist",
     "check": "fastgpt-plugin check --entry . --output ./dist",
     "pack": "fastgpt-plugin pack",
     "test": "vitest run",
