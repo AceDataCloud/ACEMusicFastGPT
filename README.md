@@ -24,3 +24,5 @@ Get an [application API key](https://platform.acedata.cloud/console/applications
 | List task history | Optional page and items per page. |
 
 Audio creation, reference import and writing lyrics are separately priced. Use the creation tool once, save its `task_id`, then retrieve the same task. If the connection breaks before a task ID arrives, inspect task history before resubmitting. The task state and `response` carry completion and partial failures. A partial result can contain one usable track. Play delivered tracks from `response.data[].audio_url`. Read [ACE Music API documentation](https://github.com/AceDataCloud/ACEMusicAPI) and [current pricing](https://platform.acedata.cloud/services/024e09b4-52cf-5e98-a91a-efedf43104c4).
+
+Import a reference asset from a public HTTPS URL with an enabled MIDI, image or video type. Retrieve the original task ID until delivery. Read assets by ID or page for free, then pass the asset ID and type to v1.1 idea generation.
