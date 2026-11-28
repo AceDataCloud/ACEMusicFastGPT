@@ -18,6 +18,16 @@ const operations: Record<string, Operation> = {
         "key": "model",
         "kind": "model",
         "required": false
+      },
+      "asset_id": {
+        "key": "asset_id",
+        "kind": "text",
+        "required": false
+      },
+      "asset_type": {
+        "key": "asset_type",
+        "kind": "asset_type",
+        "required": false
       }
     }
   },
@@ -209,6 +219,66 @@ const operations: Record<string, Operation> = {
         "required": false
       }
     }
+  },
+  "upload_asset": {
+    "endpoint": "assets",
+    "body": {
+      "action": "upload",
+      "async": true
+    },
+    "fields": {
+      "type": {
+        "key": "type",
+        "kind": "asset_type",
+        "required": true
+      },
+      "url": {
+        "key": "url",
+        "kind": "url",
+        "required": true
+      },
+      "name": {
+        "key": "name",
+        "kind": "text",
+        "required": false
+      }
+    }
+  },
+  "get_asset": {
+    "endpoint": "assets",
+    "body": {
+      "action": "retrieve"
+    },
+    "fields": {
+      "id": {
+        "key": "id",
+        "kind": "text",
+        "required": true
+      }
+    }
+  },
+  "list_assets": {
+    "endpoint": "assets",
+    "body": {
+      "action": "retrieve"
+    },
+    "fields": {
+      "type": {
+        "key": "type",
+        "kind": "asset_type",
+        "required": false
+      },
+      "page": {
+        "key": "page",
+        "kind": "page",
+        "required": false
+      },
+      "page_size": {
+        "key": "page_size",
+        "kind": "size",
+        "required": false
+      }
+    }
   }
 };
 
@@ -236,12 +306,17 @@ export function buildRequest(operation: string, values: Record<string, unknown>)
     } else {
       if (typeof value !== "string" || value.length > 20000) throw new Error("Invalid " + field);
       if (kind === "model" && !["acemusic-v1.1", "acemusic-v1"].includes(value)) throw new Error("Unknown ACE Music model");
+      if (kind === "asset_type" && !["midi", "image", "video"].includes(value)) throw new Error("Choose midi, image or video");
       if (kind === "url") {
         const parsed = new URL(value);
-        if (parsed.protocol !== "https:" || !parsed.hostname || parsed.username || parsed.password) throw new Error("Use a public HTTPS MP3 URL");
+        if (parsed.protocol !== "https:" || !parsed.hostname || parsed.username || parsed.password) throw new Error("Use a public HTTPS URL");
       }
     }
     body[entry.key] = value;
+  }
+  if (operation === "generate" && (body.asset_id || body.asset_type)) {
+    if (!body.asset_id || !body.asset_type || (body.model && body.model !== "acemusic-v1.1"))
+      throw new Error("Reference generation requires an asset ID and type with ACE Music v1.1");
   }
   if (operation === "mashup") {
     if (body.first_audio_id === body.second_audio_id) throw new Error("The two reference track IDs must be distinct");

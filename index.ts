@@ -14,10 +14,10 @@ const resultSchema = z.object({
 
 export default defineToolSet({
   manifest: {
-    pluginId: 'acedataAceMusic', version: '0.1.0',
+    pluginId: 'acedataAceMusic', version: '0.2.0',
     name: { en: 'ACE Music by Ace Data Cloud', 'zh-CN': 'ACE Music 音乐' },
     description: { en: 'Create music and lyrics, import references and retrieve tasks.', 'zh-CN': '生成歌曲和歌词、导入参考音轨并查询任务。' },
-    versionDescription: { en: 'Initial native ACE Music toolset', 'zh-CN': 'ACE Music 首个原生工具集' },
+    versionDescription: { en: 'Reference asset import, lookup and idea generation', 'zh-CN': '参考素材导入、查询与灵感创作' },
     author: 'Ace Data Cloud', repoUrl: 'https://github.com/AceDataCloud/ACEMusicFastGPT',
     tutorialUrl: 'https://github.com/AceDataCloud/ACEMusicFastGPT#readme', tags: ['multimodal'], permission: [],
   },
@@ -31,6 +31,8 @@ export default defineToolSet({
       handler: createToolHandler({
         secretSchema, outputSchema: resultSchema,
         inputSchema: z.object({
+          asset_id: z.string().trim().min(1).optional().meta({ title: 'Reference asset ID', isToolParam: true }),
+          asset_type: z.enum(['midi', 'image', 'video']).optional().meta({ title: 'Reference asset type', isToolParam: true }),
           prompt: z.string().trim().min(1).max(20000).meta({ title: 'Music or lyrics idea', isToolParam: true }),
           model: z.enum(['acemusic-v1.1', 'acemusic-v1']).optional().meta({ title: 'Model', isToolParam: true }),
         }),
@@ -38,6 +40,58 @@ export default defineToolSet({
           const result = await invoke(ctx.secrets?.apiKey ?? '', 'generate', input);
           const id = result.task_id ?? result.id;
           return { result, task_id: typeof id === 'string' ? id : '' };
+        },
+      }),
+    },
+    {
+      id: 'upload_asset',
+      name: { en: 'Import reference asset', 'zh-CN': '导入参考素材' },
+      description: { en: 'Import reference asset', 'zh-CN': '导入参考素材' },
+      toolDescription: 'Submit one separately billed reference import where enabled.',
+      handler: createToolHandler({
+        secretSchema, outputSchema: resultSchema,
+        inputSchema: z.object({
+          type: z.enum(['midi','image','video']).meta({ title: 'Asset type', isToolParam: true }),
+          url: z.string().url().meta({ title: 'Public HTTPS file URL', isToolParam: true }),
+          name: z.string().optional().meta({ title: 'Display name', isToolParam: true }),
+        }),
+        handler: async (input, ctx) => {
+          const result = await invoke(ctx.secrets?.apiKey ?? '', 'upload_asset', input);
+          return { result, task_id: typeof result.task_id === 'string' ? result.task_id : '' };
+        },
+      }),
+    },
+    {
+      id: 'get_asset',
+      name: { en: 'Get reference asset', 'zh-CN': '查询参考素材' },
+      description: { en: 'Get reference asset', 'zh-CN': '查询参考素材' },
+      toolDescription: 'Read caller-owned reference assets for free.',
+      handler: createToolHandler({
+        secretSchema, outputSchema: resultSchema,
+        inputSchema: z.object({
+          id: z.string().min(1).meta({ title: 'Owned asset ID', isToolParam: true }),
+        }),
+        handler: async (input, ctx) => {
+          const result = await invoke(ctx.secrets?.apiKey ?? '', 'get_asset', input);
+          return { result, task_id: typeof result.task_id === 'string' ? result.task_id : '' };
+        },
+      }),
+    },
+    {
+      id: 'list_assets',
+      name: { en: 'List reference assets', 'zh-CN': '列出参考素材' },
+      description: { en: 'List reference assets', 'zh-CN': '列出参考素材' },
+      toolDescription: 'Read caller-owned reference assets for free.',
+      handler: createToolHandler({
+        secretSchema, outputSchema: resultSchema,
+        inputSchema: z.object({
+          type: z.enum(['midi','image','video']).optional().meta({ title: 'Optional asset type', isToolParam: true }),
+          page: z.number().int().min(1).optional().meta({ title: 'Page', isToolParam: true }),
+          page_size: z.number().int().min(1).max(100).optional().meta({ title: 'Page size', isToolParam: true }),
+        }),
+        handler: async (input, ctx) => {
+          const result = await invoke(ctx.secrets?.apiKey ?? '', 'list_assets', input);
+          return { result, task_id: typeof result.task_id === 'string' ? result.task_id : '' };
         },
       }),
     },
